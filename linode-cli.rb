@@ -1,9 +1,10 @@
 require 'formula'
 
 class LinodeCli < Formula
+  depends_on "openssl"
   homepage 'https://github.com/linode/cli'
-  url 'https://github.com/linode/cli/archive/v1.4.6.tar.gz'
-  sha1 '5e687835d5c3fb912287b474f55acc491539a16e'
+  url 'https://github.com/linode/cli/archive/v1.4.7.tar.gz'
+  sha1 'b8e60becf2e90866858213e71d8040605f917794'
 
   resource 'JSON' do
     url 'http://www.cpan.org/authors/id/M/MA/MAKAMAKA/JSON-2.90.tar.gz'
@@ -96,13 +97,13 @@ class LinodeCli < Formula
   end
 
   resource 'libwww::perl' do
-    url 'http://www.cpan.org/authors/id/G/GA/GAAS/libwww-perl-6.05.tar.gz'
-    sha1 'e10b097a4a2f04efcb3549b6543e16534b46064d'
+    url 'http://www.cpan.org/authors/id/E/ET/ETHER/libwww-perl-6.15.tar.gz'
+    sha1 '9e27f58108135b7871bbe406e39353a1dbc99462'
   end
 
   resource 'Mozilla::CA' do
-    url 'http://www.cpan.org/authors/id/A/AB/ABH/Mozilla-CA-20130114.tar.gz'
-    sha1 '6ea49b4e29655f629212caa3f9d5a4d3a9733e0b'
+    url 'http://www.cpan.org/authors/id/A/AB/ABH/Mozilla-CA-20160104.tar.gz'
+    sha1 '3f251d0eeb8e8bb3ab1c6baafe7b40245d12a9b3'
   end
 
   resource 'Try::Tiny' do
@@ -111,23 +112,23 @@ class LinodeCli < Formula
   end
 
   resource 'Net::SSLeay' do
-    url 'http://www.cpan.org/authors/id/M/MI/MIKEM/Net-SSLeay-1.58.tar.gz'
-    sha1 'fe0f5a8b3d66c2b5371822f88b78dac42db67c79'
+    url 'http://www.cpan.org/authors/id/M/MI/MIKEM/Net-SSLeay-1.72.tar.gz'
+    sha1 '29c6cec280396df3f535a08a4fbdda62df783726'
   end
 
   resource 'IO::Socket::SSL' do
-    url 'http://www.cpan.org/authors/id/S/SU/SULLR/IO-Socket-SSL-1.969.tar.gz'
-    sha1 '0af65f7cad1b10a30b0aa49fb66ab50fa44913c0'
+    url 'http://www.cpan.org/authors/id/S/SU/SULLR/IO-Socket-SSL-2.022.tar.gz'
+    sha1 '0490d31bcae8680572cc7a3e66c7c2098845b23a'
   end
 
   resource 'LWP::Protocol::https' do
-    url 'http://www.cpan.org/authors/id/G/GA/GAAS/LWP-Protocol-https-6.04.tar.gz'
-    sha1 '5a63cb409ff4ba34006d5a45120e7facc52dc837'
+    url 'http://www.cpan.org/authors/id/M/MS/MSCHILLI/LWP-Protocol-https-6.06.tar.gz'
+    sha1 '210a2f7ba3f82ffc7a18836d0a4356986080d407'
   end
 
   resource 'Crypt::SSLeay' do
-    url 'http://www.cpan.org/authors/id/N/NA/NANIS/Crypt-SSLeay-0.64.tar.gz'
-    sha1 '081d3d30aa89e481374eaedf2d28661bcb7beada'
+    url 'http://www.cpan.org/authors/id/N/NA/NANIS/Crypt-SSLeay-0.72.tar.gz'
+    sha1 '1b39920947c33a88b19a9c8e61ccb135b56091f8'
   end
 
   resource 'Test::Harness' do
@@ -343,15 +344,17 @@ class LinodeCli < Formula
       inreplace 'inc/Module/Install/PRIVATE/Net/SSLeay.pm' do |s|
         s.gsub! 'if ( $self->prompt(', 'if ( 0 && $self->prompt('
       end
-      system 'perl', 'Makefile.PL', "INSTALL_BASE=#{libexec}"
+
+      #system 'perl', 'Makefile.PL', "INSTALL_BASE=#{libexec}", 'LDFLAGS=-L/usr/local/opt/openssl/lib', 'CPPFLAGS=-I/usr/local/opt/openssl/include'
+      system 'perl', 'Makefile.PL', "INSTALL_BASE=#{libexec}", 'LIBS=-L/usr/local/opt/openssl/lib', 'INC=-I/usr/local/opt/openssl/include'
       system 'make', 'install'
     end
 
     resource('IO::Socket::SSL').stage do
-      inreplace 'Makefile.PL' do |s|
-        s.gsub! 'my $xt = prompt( "Should I do external tests?\n".',
-                'my $xt = \'no\' || prompt( "Should I do external tests?\n".'
-      end
+    #  inreplace 'Makefile.PL' do |s|
+    #    s.gsub! 'my $xt = prompt( "Should I do external tests?\n".',
+    #            'my $xt = \'no\' || prompt( "Should I do external tests?\n".'
+    #  end
       system 'perl', 'Makefile.PL', "INSTALL_BASE=#{libexec}"
       system 'make', 'install'
     end
@@ -362,7 +365,8 @@ class LinodeCli < Formula
     end
 
     resource('Crypt::SSLeay').stage do
-      system 'perl', 'Makefile.PL', "INSTALL_BASE=#{libexec}", '-n'
+      # system 'perl', 'Makefile.PL', "INSTALL_BASE=#{libexec}", '-n', 'LIBS=-L/usr/local/opt/openssl/lib', 'INC=-I/usr/local/opt/openssl/include'
+      system 'perl', 'Makefile.PL', "INSTALL_BASE=#{libexec}", 'LIBS=-L/usr/local/opt/openssl/lib', 'INC=-I/usr/local/opt/openssl/include'
       system 'make', 'install'
     end
 
@@ -466,7 +470,7 @@ class LinodeCli < Formula
     binaries.each do |b|
       inreplace b do |s|
         s.gsub! 'use lib "$FindBin::RealBin/lib";',
-                "use lib '#{lib}/perl5/site_perl';"
+                "use lib '#{lib}/perl5/site_perl'; $ENV{'OPENSSL_PREFIX'} = '/usr/local/opt/';"
       end
     end
 
